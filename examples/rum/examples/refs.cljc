@@ -4,16 +4,18 @@
     [rum.examples.core :as core]))
 
 
-(rum/defcc ta
-  < { :after-render
+(def r (rum/create-ref))
+
+(rum/defcs ta
+  < {:after-render
       (fn [state]
-        (let [ta (rum/ref-node state "ta")]
+        (let [ta (rum/ref-node r)]
           (set! (.-height (.-style ta)) "0")
           (set! (.-height (.-style ta)) (str (+ 2 (.-scrollHeight ta)) "px")))
-        state) }
-  [comp]
+        state)}
+  [state]
   [:textarea
-    { :ref :ta
+    { :ref r
       :style { :width   "100%"
                :padding "10px"
                :font    "inherit"
@@ -21,7 +23,7 @@
                :resize  "none"}
       :default-value "Auto-resizing\ntextarea"
       :placeholder "Auto-resizing textarea"
-      :on-change (fn [_] (rum/request-render comp)) }])
+      :on-change (fn [_] (rum/request-render state)) }])
 
 
 (rum/defc refs []

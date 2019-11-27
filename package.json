@@ -1,0 +1,15 @@
+{
+  "name": "rum",
+  "version": "0.11.4",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/g7s/rum.git"
+  },
+  "dependencies": {
+    "react": "^16.12.0",
+    "react-dom": "^16.12.0"
+  },
+  "devDependencies": {
+    "prop-types": "^15.7.2"
+  }
+}

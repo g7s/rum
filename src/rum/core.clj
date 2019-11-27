@@ -62,29 +62,58 @@
        (~builder (fn ~@render-body) ~mixins ~(str name)))))
 
 
+(defmacro defnc
+  "```
+   (defnc name doc-string? (< wrappers+)? [ params* ] render-body+)
+   ```
+
+   Defnc does a couple of things:
+
+     1. Wraps body into sablono/compile-html
+     2. Generates render function from that
+     3. Takes render function and wrappers, builds React function component from them
+     4. Using that component, generates a constructor fn [args]->ReactElement
+     5. Defines top-level var with provided name and assigns the constructor to it
+
+   Usage:
+
+   ```
+   (rum/defnc label < rum/wrap-memo [t]
+     [:div t])
+
+   ;; creates React function component
+   ;; wraps it with rum/wrap-memo
+   ;; defines ctor fn (defn label [t] ...) => element
+
+   (label \"text\") ;; => returns React element built with label component
+   ```"
+  [& body]
+  (-defc 'rum.core/build-defnc (boolean (:ns &env)) body))
+
+
 (defmacro defc
   "```
    (defc name doc-string? (< mixins+)? [ params* ] render-body+)
    ```
-  
+
    Defc does couple of things:
-   
+
      1. Wraps body into sablono/compile-html
      2. Generates render function from that
      3. Takes render function and mixins, builds React class from them
      4. Using that class, generates constructor fn [args]->ReactElement
      5. Defines top-level var with provided name and assigns ctor to it
-  
+
    Usage:
-   
+
    ```
    (rum/defc label < rum/static [t]
      [:div t])
-  
+
    ;; creates React class
    ;; adds mixin rum/static
    ;; defines ctor fn (defn label [t] ...) => element
-  
+
    (label \"text\") ;; => returns React element built with label class
    ```"
   [& body]
@@ -95,20 +124,10 @@
   "```
    (defcs name doc-string? (< mixins+)? [ state-arg params* ] render-body+)
    ```
-   
+
    Same as [[defc]], but render will take additional first argument: component state."
   [& body]
   (-defc 'rum.core/build-defcs (boolean (:ns &env)) body))
-
-
-(defmacro defcc
-  "```
-   (defcc name doc-string? (< mixins+)? [ comp-arg params* ] render-body+)
-   ```
-
-   Same as [[defc]], but render will take additional first argument: react component."
-  [& body]
-  (-defc 'rum.core/build-defcc (boolean (:ns &env)) body))
 
 
 (defn- build-ctor [render mixins display-name]
@@ -132,6 +151,12 @@
         (or dom [:rum/nothing])))))
 
 
+(defn ^:no-doc build-defnc [render-body wrappers display-name]
+  (let [render-body (reduce #(%2 %1) render-body wrappers)]
+    (fn [& args]
+      (or (apply render-body args) [:rum/nothing]))))
+
+
 (defn ^:no-doc build-defc [render-body mixins display-name]
   (if (empty? mixins)
     (fn [& args] (or (apply render-body args) [:rum/nothing]))
@@ -144,94 +169,29 @@
     (build-ctor render mixins display-name)))
 
 
-(defn ^:no-doc build-defcc [render-body mixins display-name]
-  (let [render (fn [state] [(apply render-body (:rum/react-component state) (:rum/args state)) state])]
-    (build-ctor render mixins display-name)))
-
-
 ;; rum.core APIs
-
-
-(defn with-key
-  "Adds React key to element.
-   
-   ```
-   (rum/defc label [text] [:div text])
-
-   (-> (label)
-       (rum/with-key \"abc\")
-       (rum/mount js/document.body))
-   ```"
-  [element key]
-  (cond
-    (render/nothing? element)
-    element
-    
-    (map? (get element 1))
-    (assoc-in element [1 :key] key)
-
-    :else
-    (into [(first element) {:key key}] (next element))))
-
-
-(defn with-ref
-  "Supported, does nothing."
-  [element ref]
-  element)
-
-
-;; mixins
-
-(def static "Supported, does nothing." {})
-
-
-(defn local
-  "Mixin constructor. Adds an atom to component’s state that can be used to keep stuff during component’s lifecycle. Component will be re-rendered if atom’s value changes. Atom is stored under user-provided key or under `:rum/local` by default.
-  
-   ```
-   (rum/defcs counter < (rum/local 0 :cnt)
-     [state label]
-     (let [*cnt (:cnt state)]
-       [:div {:on-click (fn [_] (swap! *cnt inc))}
-         label @*cnt]))
-   
-   (rum/mount (counter \"Click count: \"))
-   ```"
-  ([initial] (local initial :rum/local))
-  ([initial key]
-    {:will-mount (fn [state]
-                   (assoc state key (atom initial)))}))
-
-
-(def reactive "Supported, does nothing." {})
-
-
-(def ^{:arglists '([ref])
-       :doc "Supported as simple deref."}
-  react deref)
-
 
 (defn cursor-in
   "Given atom with deep nested value and path inside it, creates an atom-like structure
    that can be used separately from main atom, but will sync changes both ways:
-  
+
    ```
    (def db (atom { :users { \"Ivan\" { :age 30 }}}))
-   
+
    (def ivan (rum/cursor db [:users \"Ivan\"]))
    (deref ivan) ;; => { :age 30 }
-   
+
    (swap! ivan update :age inc) ;; => { :age 31 }
    (deref db) ;; => { :users { \"Ivan\" { :age 31 }}}
-   
+
    (swap! db update-in [:users \"Ivan\" :age] inc)
    ;; => { :users { \"Ivan\" { :age 32 }}}
-   
+
    (deref ivan) ;; => { :age 32 }
    ```
-  
+
    Returned value supports `deref`, `swap!`, `reset!`, watches and metadata.
-  
+
    The only supported option is `:meta`"
   ^rum.cursor.Cursor [ref path & { :as options }]
   (if (instance? Cursor ref)
@@ -248,9 +208,9 @@
 (def ^{:style/indent 2
        :arglists '([refs key f] [refs key f opts])
        :doc "Use this to create “chains” and acyclic graphs of dependent atoms.
-   
+
              [[derived-atom]] will:
-          
+
              - Take N “source” refs.
              - Set up a watch on each of them.
              - Create “sink” atom.
@@ -267,19 +227,19 @@
              (def *x (derived-atom [*a *b] ::key
                        (fn [a b]
                          (str a \":\" b))))
-             
+
              (type *x)  ;; => clojure.lang.Atom
              (deref *x) ;; => \"0:1\"
-             
+
              (swap! *a inc)
              (deref *x) ;; => \"1:1\"
-             
+
              (reset! *b 7)
              (deref *x) ;; => \"1:7\"
              ```
 
              Arguments:
-          
+
              - `refs` - sequence of source refs,
              - `key`  - unique key to register watcher, same as in `clojure.core/add-watch`,
              - `f`    - function that must accept N arguments (same as number of source refs) and return a value to be written to the sink ref. Note: `f` will be called with already dereferenced values,
@@ -304,29 +264,189 @@
 ;; method parity with CLJS version so you can avoid conditional directive
 ;; in e.g. did-mount/will-unmount mixin bodies
 
-(defn ^:no-doc state [c]
-  (throw (UnsupportedOperationException. "state is only available from ClojureScript")))
+
+(defn request-render
+  [component]
+  (throw (UnsupportedOperationException. "request-render is only available from ClojureScript")))
 
 
-(defn ^:no-doc dom-node [s]
-  (throw (UnsupportedOperationException. "dom-node is only available from ClojureScript")))
+(defn force-render
+  [component]
+  (throw (UnsupportedOperationException. "force-render is only available from ClojureScript")))
 
 
-(defn ^:no-doc ref [s k]
-  (throw (UnsupportedOperationException. "ref is only available from ClojureScript")))
-
-
-(defn ^:no-doc ref-node [s k]
-  (throw (UnsupportedOperationException. "ref is only available from ClojureScript")))
-
-
-(defn ^:no-doc mount [c n]
+(defn mount
+  [element node]
   (throw (UnsupportedOperationException. "mount is only available from ClojureScript")))
 
 
-(defn ^:no-doc unmount [c]
+(defn unmount
+  [node]
   (throw (UnsupportedOperationException. "unmount is only available from ClojureScript")))
 
 
-(defn ^:no-doc request-render [c]
-  (throw (UnsupportedOperationException. "request-render is only available from ClojureScript")))
+(defn hydrate
+  [element node]
+  (throw (UnsupportedOperationException. "hydrate is only available from ClojureScript")))
+
+
+(defn portal
+  [element node]
+  (throw (UnsupportedOperationException. "portal is only available from ClojureScript")))
+
+
+(defn react-component
+  [state]
+  (:rum/react-component state))
+
+
+(defn dom-node
+  [state]
+  (throw (UnsupportedOperationException. "dom-node is only available from ClojureScript")))
+
+
+(defn create-ref
+  []
+  (atom nil))
+
+
+(defn ref-val
+  [ref]
+  @ref)
+
+
+(defn set-ref-val!
+  [ref val]
+  (reset! ref val))
+
+
+(defn with-key
+  "Adds React key to element.
+
+   ```
+   (rum/defc label [text] [:div text])
+
+   (-> (label)
+       (rum/with-key \"abc\")
+       (rum/mount js/document.body))
+   ```"
+  [element key]
+  (cond
+    (render/nothing? element)
+    element
+
+    (map? (get element 1))
+    (assoc-in element [1 :key] key)
+
+    :else
+    (into [(first element) {:key key}] (next element))))
+
+
+(defn with-ref
+  "Supported, does nothing."
+  [element ref]
+  (set-ref-val! ref element)
+  element)
+
+
+(defn ref-node
+  [ref]
+  (throw (UnsupportedOperationException. "ref-node is only available from ClojureScript")))
+
+
+;; mixins
+
+(def static "Supported, does nothing." {})
+
+
+(defn local
+  "Mixin constructor. Adds an atom to component’s state that can be used to keep stuff during component’s lifecycle. Component will be re-rendered if atom’s value changes. Atom is stored under user-provided key or under `:rum/local` by default.
+
+   ```
+   (rum/defcs counter < (rum/local 0 :cnt)
+     [state label]
+     (let [*cnt (:cnt state)]
+       [:div {:on-click (fn [_] (swap! *cnt inc))}
+         label @*cnt]))
+
+   (rum/mount (counter \"Click count: \"))
+   ```"
+  ([initial] (local initial :rum/local))
+  ([initial key]
+   {:will-mount (fn [state]
+                  (assoc state key (atom initial)))}))
+
+
+(def reactive "Supported, does nothing." {})
+
+
+(def ^{:arglists '([ref])
+       :doc      "Supported as simple deref."}
+  react deref)
+
+
+;; raw hooks
+
+(defn useRef
+  [initial]
+  (throw (UnsupportedOperationException. "useRef is only available from ClojureScript")))
+
+
+(defn useState
+  [initial]
+  (throw (UnsupportedOperationException. "useState is only available from ClojureScript")))
+
+
+(defn useEffect
+  [f deps]
+  (throw (UnsupportedOperationException. "useEffect is only available from ClojureScript")))
+
+
+(defn useMemo
+  [f deps]
+  (throw (UnsupportedOperationException. "useMemo is only available from ClojureScript")))
+
+
+(defn useCallback
+  [f deps]
+  (throw (UnsupportedOperationException. "useCallback is only available from ClojureScript")))
+
+
+(defn useLayoutEffect
+  [f deps]
+  (throw (UnsupportedOperationException. "useLayoutEffect is only available from ClojureScript")))
+
+
+;; hooks
+
+(defn use-ref atom)
+
+
+(def use-state atom)
+
+
+(def use-var atom)
+
+
+(def ^:private noop-effect (fn ([_]) ([_ _])))
+
+
+(def ^:private identity-2 (fn ([f] f) ([f _] f)))
+
+
+(def use-effect noop-effect)
+
+
+(def use-layout-effect noop-effect)
+
+
+(def use-memo (fn ([f] (f)) ([f _] (f))))
+
+
+(def use-callback identity-2)
+
+
+(def deref cderef)
+
+
+(def wrap-memo identity-2)
