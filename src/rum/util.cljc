@@ -49,6 +49,15 @@
           (react-hook (hook-impl-fn f) (to-array-deps deps)))))
 
 
+     (defn map->obj
+       [m]
+       (let [obj #js {}]
+         (run! (fn [[k v]]
+                 (unchecked-set obj (name k) v))
+               m)
+         obj))
+
+
      (defn eq-props?
        [eq-fn old-props new-props]
        (let [old-keys (.keys js/Object old-props)

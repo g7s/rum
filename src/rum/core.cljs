@@ -147,6 +147,24 @@
     (with-meta ctor { :rum/class class })))
 
 
+(defn ^:no-doc build-defnc [render-body wrappers display-name]
+  (let [gwr  (group-by #(:wrap % :component) wrappers)
+        cwr  (map (some-fn :fn identity) (:component gwr))
+        pwr  (map :fn (:props gwr))
+        fnc  (fn [props]
+               (apply render-body (aget props ":rum/args")))
+        fnc  (reduce #(%2 %1) fnc cwr)
+        _    (aset fnc "displayName" display-name)
+        ctor (if (seq pwr)
+               (fn [& args]
+                 (js/React.createElement fnc (-> { ":rum/args" args }
+                                                 (call-all pwr)
+                                                 util/map->obj)))
+               (fn [& args]
+                 (js/React.createElement fnc #js { ":rum/args" args })))]
+    (with-meta ctor { :rum/class fnc })))
+
+
 (defn ^:no-doc build-defc [render-body mixins display-name]
   (if (empty? mixins)
     (let [class (fn [props]
@@ -164,16 +182,11 @@
     (build-ctor render mixins display-name)))
 
 
-(defn ^:no-doc build-defcc [render-body mixins display-name]
-  (let [render (fn [state] [(apply render-body (react-component state) (rum-args state)) state])]
-    (build-ctor render mixins display-name)))
-
-
 (defn request-render
   [state]
   (letfn [(updater [state]
-            (unchecked-set state ":grog.core/rflag"
-                           (not (unchecked-get state ":grog.core/rflag")))
+            (unchecked-set state ":rum/rflag"
+                           (not (unchecked-get state ":rum/rflag")))
             state)]
     (.setState (react-component state) updater)))
 
@@ -209,26 +222,26 @@
 
 
 (defn create-context
-  "Create an instance of React Context"
+  "Create an instance of React Context."
   [value]
   (js/React.createContext value))
 
 
 (defn provide-context
-  "Provide a `value` to consumers in UI subtree via React’s Context API"
+  "Provide a `value` to consumers in UI subtree via React’s Context API."
   [ctx value & children]
   (apply js/React.createElement (.-Provider ctx) #js {:value value} children))
 
 
 (defn with-context
-  "Subscribes UI subtree to context changes.
-  Calls `render-child` everytime a new value gets added into context via `Provider`"
+  "Subscribe UI subtree to context changes.
+  Call `render-child` everytime a new value gets added into context via `Provider`."
   [ctx render-child]
   (js/React.createElement (.-Consumer ctx) nil #(render-child %)))
 
 
 (defn dom-node
-  "Given grog `state` return top-level DOM node of component."
+  "Given `state` return top-level DOM node of component."
   [state]
   (js/ReactDOM.findDOMNode (react-component state)))
 
@@ -398,6 +411,8 @@
 
 (def useEffect js/React.useEffect)
 
+(def useContext js/React.useContext)
+
 (def useMemo js/React.useMemo)
 
 (def useCallback js/React.useCallback)
@@ -470,6 +485,9 @@
                          (if (fn? dispose) dispose (constantly nil))))))
 
 
+(def use-context useContext)
+
+
 (def use-memo
   (util/create-hook useMemo identity))
 
@@ -481,6 +499,7 @@
 
 
 (defn use-react
+  "Hook that re-renders component when `iref` changes. Return deref `iref`."
   [iref]
   (let [state (use-state @iref)
         key   (use-memo
@@ -493,13 +512,36 @@
     @state))
 
 
+(defn use-render
+  "Hook that return a function that when called will re-render component."
+  []
+  (let [s (use-state false)]
+    (fn []
+      (swap! s not))))
+
+
 ;; wrappers
 
+;; A wrapper is a map with a :wrap key that specifies the type of wrap
+;; (it can be either :component or :props default :component) and a
+;; :fn key that holds the wrapping function.
+;; Wrappers can be fed into a defnc component.
+
 (defn wrap-memo
-  ([component]
-   (js/React.memo component))
-  ([component eq-fn]
-   (js/React.memo component #(util/eq-props? eq-fn %1 %2))))
+  ([]
+   (fn [component]
+     (js/React.memo component #(= (gobj/get %1 ":rum/args")
+                                  (gobj/get %2 ":rum/args")))))
+  ([eq-fn]
+   (fn [component]
+     (js/React.memo component eq-fn))))
+
+
+(defn wrap-key
+  [key-fn]
+  {:wrap :props
+   :fn   (fn [props]
+           (assoc props "key" (apply key-fn (get props ":rum/args"))))})
 
 
 ;; derived-atom

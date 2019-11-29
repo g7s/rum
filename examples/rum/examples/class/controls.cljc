@@ -1,7 +1,7 @@
-(ns rum.examples.controls
+(ns rum.examples.class.controls
   (:require
     [rum.core :as rum]
-    [rum.examples.core :as core]))
+    [rum.examples.class.core :as core]))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -34,7 +34,5 @@
 ])
 
 
-#?(:cljs
 (defn mount! [mount-el]
-     (rum/hydrate (controls) mount-el)))
-
+   (rum/hydrate (controls) mount-el))

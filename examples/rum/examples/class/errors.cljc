@@ -1,4 +1,4 @@
-(ns rum.examples.errors
+(ns rum.examples.class.errors
   (:require
     [rum.core :as rum]))
 

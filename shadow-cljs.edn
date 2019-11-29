@@ -8,5 +8,9 @@
   {:target     :browser
    :output-dir "target/js"
    :asset-path "/js"
-   :modules    {:main {:entries [rum.examples]}}
+   :modules    {:base  {:entries [cljs.core rum.core]}
+                :class {:entries [rum.examples.class]
+                        :depends-on #{:base}}
+                :fn    {:entries [rum.examples.fn]
+                        :depends-on #{:base}}}
    }}}

@@ -1,4 +1,4 @@
-(ns rum.examples.multiple-return
+(ns rum.examples.class.multiple-return
   (:require [rum.core :as rum]))
 
 

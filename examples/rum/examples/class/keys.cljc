@@ -1,8 +1,8 @@
-(ns rum.examples.keys
+(ns rum.examples.class.keys
   (:refer-clojure :exclude [keys])
   (:require
     [rum.core :as rum]
-    [rum.examples.core :as core]))
+    [rum.examples.class.core :as core]))
 
 
 (rum/defc keyed

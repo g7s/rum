@@ -1,7 +1,7 @@
-(ns rum.examples.timer-reactive
+(ns rum.examples.class.timer-reactive
   (:require
     [rum.core :as rum]
-    [rum.examples.core :as core]))
+    [rum.examples.class.core :as core]))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

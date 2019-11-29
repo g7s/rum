@@ -1,4 +1,4 @@
-(ns rum.examples.self-reference
+(ns rum.examples.class.self-reference
   (:require
     [rum.core :as rum]))
 

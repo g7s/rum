@@ -1,20 +1,26 @@
-(ns rum.examples-page
+(ns rum.examples.pages.fn
   (:require
     [rum.core :as rum]
-    [rum.examples.core :as core]
-    [rum.examples.timer-reactive :as timer-reactive]
-    [rum.examples.timer-static   :as timer-static]
-    [rum.examples.controls       :as controls]
-    [rum.examples.binary-clock   :as binary-clock]
-    [rum.examples.board-reactive :as board-reactive]
-    [rum.examples.bmi-calculator :as bmi-calculator]
-    [rum.examples.inputs         :as inputs]
-    [rum.examples.refs           :as refs]
-    [rum.examples.local-state    :as local-state]
-    [rum.examples.keys           :as keys]
-    [rum.examples.self-reference :as self-reference]
-    [rum.examples.multiple-return :as multiple-return]
-    [rum.examples.errors         :as errors]))
+    [rum.examples.fn.core :as core]
+    [rum.examples.fn.bmi-calculator :as bmi-calculator]
+    [rum.examples.fn.binary-clock   :as binary-clock]
+
+    [rum.examples.fn.timer-reactive :as timer-reactive]
+    [rum.examples.fn.timer-static   :as timer-static]
+    [rum.examples.fn.controls       :as controls]
+    [rum.examples.fn.context        :as context]
+    [rum.examples.fn.custom-props   :as custom-props]
+    [rum.examples.fn.board-reactive :as board-reactive]
+    [rum.examples.fn.form-validation :as form-validation]
+    [rum.examples.fn.inputs         :as inputs]
+    [rum.examples.fn.refs           :as refs]
+    [rum.examples.fn.local-state    :as local-state]
+    [rum.examples.fn.keys           :as keys]
+    [rum.examples.fn.self-reference :as self-reference]
+    [rum.examples.fn.portals        :as portals]
+    [rum.examples.fn.multiple-return :as multiple-return]
+    [rum.examples.fn.errors         :as errors]
+    ))
 
 (def page (str
 "<!doctype html>
@@ -79,7 +85,7 @@
 
     <div class=example>
       <div class=example-title>Form validation</div>
-      <div id=form-validation></div>
+      <div id=form-validation>" (rum/render-html (form-validation/form-validation)) "</div>
     </div>
 
     <div class=example>
@@ -109,12 +115,12 @@
 
     <div class=example>
       <div class=example-title>Contexts</div>
-      <div id=context></div>
+      <div id=context>" (rum/render-html (context/context)) "</div>
     </div>
 
     <div class=example>
       <div class=example-title>Custom Methods and Data</div>
-      <div id=custom-props></div>
+      <div id=custom-props>" (rum/render-html (custom-props/custom-props)) "</div>
     </div>
 
     <div class=example>
@@ -125,7 +131,7 @@
     <div class=example>
       <div class=example-title>Portals</div>
       <div id=portal-off-root></div>
-      <div id=portal-root></div>
+      <div id=portal-root>" (rum/render-html (portals/root)) "</div>
     </div>
 
     <div class=example>
@@ -134,12 +140,13 @@
       <p>Client: <span id=client-errors></span></p>
     </div>
 
-    <script src='js/main.js' type='text/javascript'></script>
+    <script src='js/base.js' type='text/javascript'></script>
+    <script src='js/fn.js' type='text/javascript'></script>
   </body>
 </html>"))
 
 
 (defn gen
   []
-  (println "Writing \"index.html\"")
-  (spit "target/index.html" page))
+  (println "Writing \"fn.html\"")
+  (spit "target/fn.html" page))

@@ -292,7 +292,22 @@
 
 (defn portal
   [element node]
-  (throw (UnsupportedOperationException. "portal is only available from ClojureScript")))
+  element)
+
+
+(defn create-context
+  [value]
+  value)
+
+
+(defn provide-context
+  [ctx value & children]
+  children)
+
+
+(defn with-context
+  [ctx render-child]
+  (render-child ctx))
 
 
 (defn react-component
@@ -402,6 +417,11 @@
   (throw (UnsupportedOperationException. "useEffect is only available from ClojureScript")))
 
 
+(defn useContext
+  [ctx]
+  (throw (UnsupportedOperationException. "useContext is only available from ClojureScript")))
+
+
 (defn useMemo
   [f deps]
   (throw (UnsupportedOperationException. "useMemo is only available from ClojureScript")))
@@ -419,7 +439,7 @@
 
 ;; hooks
 
-(defn use-ref atom)
+(def use-ref atom)
 
 
 (def use-state atom)
@@ -440,13 +460,22 @@
 (def use-layout-effect noop-effect)
 
 
+(def use-context identity)
+
+
 (def use-memo (fn ([f] (f)) ([f _] (f))))
 
 
 (def use-callback identity-2)
 
 
-(def deref cderef)
+(def use-react deref)
 
 
-(def wrap-memo identity-2)
+(defn use-render [] (fn []))
+
+
+(defn wrap-memo ([] identity) ([e] identity))
+
+
+(defn wrap-key [e] identity)

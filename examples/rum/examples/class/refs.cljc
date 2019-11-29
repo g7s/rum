@@ -1,7 +1,7 @@
-(ns rum.examples.refs
+(ns rum.examples.class.refs
   (:require
     [rum.core :as rum]
-    [rum.examples.core :as core]))
+    [rum.examples.class.core :as core]))
 
 
 (def r (rum/create-ref))

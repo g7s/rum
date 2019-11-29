@@ -1,7 +1,7 @@
-(ns rum.examples.form-validation
+(ns rum.examples.class.form-validation
   (:require
     [rum.core :as rum]
-    [rum.examples.core :as core]))
+    [rum.examples.class.core :as core]))
 
 
 (rum/defc validating-input < rum/reactive [ref f]
@@ -13,7 +13,7 @@
            :on-change #(reset! ref (.. % -target -value))}])
 
 
-(rum/defcc restricting-input < rum/reactive [comp ref f]
+(rum/defcs restricting-input < rum/reactive [state ref f]
   [:input {:type "text"
            :style {:width 170}
            :value (rum/react ref)
@@ -22,21 +22,20 @@
                            (reset! ref new-val)
                            ;; request-render is mandatory because sablono :input
                            ;; keeps current value in input’s state and always applies changes to it
-                           (rum/request-render comp)))}])
+                           (rum/request-render state)))}])
 
 
 (rum/defcs restricting-input-native < rum/reactive [state ref f]
-  (let [comp (:rum/react-component state)]
-    (js/React.createElement "input"
-      #js {:type "text"
-           :style #js {:width 170}
-           :value (rum/react ref)
-           :onChange #(let [new-val (.. % -target -value)]
-                        (when (f new-val)
-                          (reset! ref new-val))
-                        ;; need forceUpdate here because otherwise rendering will be delayed until requestAnimationFrame 
-                        ;; and that breaks cursor position inside input
-                        (.forceUpdate comp))})))
+  (js/React.createElement "input"
+                          #js {:type     "text"
+                               :style    #js {:width 170}
+                               :value    (rum/react ref)
+                               :onChange #(let [new-val (.. % -target -value)]
+                                            (when (f new-val)
+                                              (reset! ref new-val))
+                                            ;; need forceUpdate here because otherwise rendering will be delayed until requestAnimationFrame
+                                            ;; and that breaks cursor position inside input
+                                            (rum/force-render state))}))
 
 
 (rum/defc form-validation []

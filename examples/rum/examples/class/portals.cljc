@@ -1,7 +1,7 @@
-(ns rum.examples.portals
+(ns rum.examples.class.portals
   (:require
     [rum.core :as rum]
-    [rum.examples.core :as core]))
+    [rum.examples.class.core :as core]))
 
 
 (rum/defc portal [*clicks]

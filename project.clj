@@ -19,7 +19,7 @@
                          [org.clojure/google-closure-library "0.0-20190213-2033d5d9"]
                          [clj-diffmatchpatch "0.0.9.3" :exclusions [org.clojure/clojure]]] }
    :repl {:source-paths ["dev"]
-          :dependencies []
+          :dependencies [[org.clojure/tools.namespace "0.3.1"]]
           :repl-options {:init-ns user
                          :nrepl-middleware
                          [shadow.cljs.devtools.server.nrepl04/middleware]}}

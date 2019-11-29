@@ -25,10 +25,10 @@
   ([a b c]))
 
 
-(rum/defcc comp-arglists-1
-  ([comp a])
-  ([comp a b])
-  ([comp a b c]))
+(rum/defnc fn-arglists
+  ([a])
+  ([a b])
+  ([a b c]))
 
 
 (deftest test-arglists
@@ -36,5 +36,5 @@
          '([])))
   (is (= (:arglists (meta #'comp-arglists))
          '([a] [a b] [a b c])))
-  (is (= (:arglists (meta #'comp-arglists-1))
+  (is (= (:arglists (meta #'fn-arglists))
          '([a] [a b] [a b c]))))

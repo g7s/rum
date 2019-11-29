@@ -1,7 +1,7 @@
-(ns rum.examples.binary-clock
+(ns rum.examples.class.binary-clock
   (:require
     [rum.core :as rum]
-    [rum.examples.core :as core]))
+    [rum.examples.class.core :as core]))
 
 
 ;; Binary clock

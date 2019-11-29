@@ -1,15 +1,11 @@
-(ns rum.examples.bmi-calculator
+(ns rum.examples.class.bmi-calculator
   (:require
     [rum.core :as rum]
-    [rum.examples.core :as core]))
+    [rum.examples.class.core :as core]))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Reagent stype BMI calculator
-
-
-(def *bmi-data (atom {:height 180
-                      :weight 80}))
 
 
 (defn calc-bmi [{:keys [height weight bmi] :as data}]
@@ -17,6 +13,10 @@
     (if (nil? bmi)
       (assoc data :bmi (/ weight (* h h)))
       (assoc data :weight (* bmi h h)))))
+
+
+(def *bmi-data (atom (calc-bmi {:height 180
+                                :weight 80})))
 
 
 (defn slider [param value min max]
@@ -40,7 +40,6 @@
                           (< bmi 25)   ["inherit" "normal"]
                           (< bmi 30)   ["orange" "overweight"]
                           :else        ["red" "obese"])]
-    (reset! *bmi-data data)
     [:div.bmi
       [:div
         "Height: " (int height) "cm"
@@ -55,6 +54,5 @@
 
 
 ;; After initial mount, all changes will be re-rendered automatically
-#?(:cljs
 (defn mount! [mount-el]
-     (rum/hydrate (bmi-calculator) mount-el)))
+  (rum/hydrate (bmi-calculator) mount-el))

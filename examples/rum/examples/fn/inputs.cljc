@@ -1,4 +1,4 @@
-(ns rum.examples.inputs
+(ns rum.examples.fn.inputs
   (:require
     [clojure.string :as str]
     [rum.core :as rum]))
@@ -7,18 +7,18 @@
 (def values (range 1 5))
 
 
-(rum/defc reactive-input < rum/reactive
+(rum/defnc reactive-input
   [*ref]
-  (let [value (rum/react *ref)]
+  (let [value (rum/use-react *ref)]
     [:input { :type "text"
               :value (str value)
               :style { :width 170 }
               :on-change (fn [e] (reset! *ref (long (.. e -currentTarget -value)))) }]))
 
 
-(rum/defc checkboxes < rum/reactive
+(rum/defnc checkboxes
   [*ref]
-  (let [value (rum/react *ref)]
+  (let [value (rum/use-react *ref)]
     [:div
       (for [v values]
         [:input { :key v
@@ -26,11 +26,11 @@
                   :checked (= v value)
                   :value   v
                   :on-click (fn [_] (reset! *ref v)) }])]))
-    
 
-(rum/defc radio < rum/reactive
+
+(rum/defnc radio
   [*ref]
-  (let [value (rum/react *ref)]
+  (let [value (rum/use-react *ref)]
     [:div
       (for [v values]
         [:input { :key v
@@ -41,9 +41,9 @@
                   :on-click (fn [_] (reset! *ref v)) }])]))
 
 
-(rum/defc select < rum/reactive
+(rum/defnc select
   [*ref]
-  (let [value (rum/react *ref)]
+  (let [value (rum/use-react *ref)]
     [:select
       { :on-change (fn [e] (reset! *ref (long (.. e -target -value))))
         :value (str value) }
@@ -60,20 +60,20 @@
       v')))
 
 
-(rum/defc shuffle-button < rum/reactive
+(rum/defnc shuffle-button
   [*ref]
   [:button
-    { :on-click (fn [_] 
+    { :on-click (fn [_]
                   (swap! *ref next-value)) }
     "Next value"])
 
 
-(rum/defc value < rum/reactive
+(rum/defnc value
   [*ref]
-  [:code (pr-str (rum/react *ref))])
+  [:code (pr-str (rum/use-react *ref))])
 
 
-(rum/defc inputs []
+(rum/defnc inputs []
   (let [*ref (atom 1)]
     [:dl
       [:dt "Input"]  [:dd (reactive-input *ref)]
@@ -83,8 +83,5 @@
       [:dt (value *ref)] [:dd (shuffle-button *ref)]]))
 
 
-#?(:cljs
 (defn mount! [mount-el]
-     (rum/hydrate (inputs) mount-el)))
-
-
+  (rum/hydrate (inputs) mount-el))

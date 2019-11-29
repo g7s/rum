@@ -1,15 +1,15 @@
-(ns rum.examples.local-state
+(ns rum.examples.fn.local-state
   (:require
     [rum.core :as rum]
-    [rum.examples.core :as core]))
+    [rum.examples.fn.core :as core]))
 
 
 ;; Local component state
 
 
-(rum/defcs local-state < (rum/local 0)
-  [state title]
-  (let [*count (:rum/local state)]
+(rum/defnc local-state
+  [title]
+  (let [*count (rum/use-state 0)]
     [:div
      {:style {"-webkit-user-select" "none"
               "cursor" "pointer"}
@@ -17,6 +17,5 @@
      title ": " @*count]))
 
 
-#?(:cljs
 (defn mount! [mount-el]
-     (rum/hydrate (local-state "Clicks count") mount-el)))
+  (rum/hydrate (local-state "Clicks count") mount-el))

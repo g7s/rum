@@ -1,26 +1,25 @@
-(ns rum.examples
+(ns rum.examples.class
   (:require
     [clojure.string :as str]
     [rum.core :as rum]
-    [rum.examples.core :as core]
-
-    [rum.examples.timer-static :as timer-static]
-    [rum.examples.timer-reactive :as timer-reactive]
-    [rum.examples.controls :as controls]
-    [rum.examples.binary-clock :as binary-clock]
-    [rum.examples.board-reactive :as board-reactive]
-    [rum.examples.bmi-calculator :as bmi-calculator]
-    [rum.examples.form-validation :as form-validation]
-    [rum.examples.inputs :as inputs]
-    [rum.examples.refs :as refs]
-    [rum.examples.local-state :as local-state]
-    [rum.examples.keys :as keys]
-    [rum.examples.self-reference :as self-reference]
-    [rum.examples.context :as context]
-    [rum.examples.custom-props :as custom-props]
-    [rum.examples.multiple-return :as multiple-return]
-    [rum.examples.portals :as portals]
-    [rum.examples.errors :as errors]))
+    [rum.examples.class.core :as core]
+    [rum.examples.class.timer-static :as timer-static]
+    [rum.examples.class.timer-reactive :as timer-reactive]
+    [rum.examples.class.controls :as controls]
+    [rum.examples.class.binary-clock :as binary-clock]
+    [rum.examples.class.board-reactive :as board-reactive]
+    [rum.examples.class.bmi-calculator :as bmi-calculator]
+    [rum.examples.class.form-validation :as form-validation]
+    [rum.examples.class.inputs :as inputs]
+    [rum.examples.class.refs :as refs]
+    [rum.examples.class.local-state :as local-state]
+    [rum.examples.class.keys :as keys]
+    [rum.examples.class.self-reference :as self-reference]
+    [rum.examples.class.context :as context]
+    [rum.examples.class.custom-props :as custom-props]
+    [rum.examples.class.multiple-return :as multiple-return]
+    [rum.examples.class.portals :as portals]
+    [rum.examples.class.errors :as errors]))
 
 
 (enable-console-print!)

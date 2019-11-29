@@ -3,15 +3,17 @@
    [clojure.tools.namespace.repl :as repl]
    [shadow.cljs.devtools.server :as server]
    [shadow.cljs.devtools.api :as api]
-   [rum.examples-page :as examples]))
+   [rum.examples.pages.class :as class-page]
+   [rum.examples.pages.fn :as fn-page]))
 
 
-(clojure.tools.namespace.repl/set-refresh-dirs "dev" "src" "examples")
+(repl/set-refresh-dirs "dev" "src" "examples")
 
 
 (defn gen
   []
-  (examples/gen))
+  (class-page/gen)
+  (fn-page/gen))
 
 
 (defn go
