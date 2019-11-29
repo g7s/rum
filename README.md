@@ -1,3 +1,53 @@
+# READ FIRST
+
+This is a fork of Rum that introduces several backwards incompatible changes.
+
+1. There is no `defcc` macro
+1. `request-render` and `force-render` accept state instead of component
+2. There is a `defnc` macro that defines a react function component that accept wrappers
+
+   ```clojure
+(rum/defnc self-reference <
+  (rum/wrap-memo)
+  (rum/wrap-key (fn [form depth] (str form)))
+  ([form] (self-reference form 0))
+  ([form depth]
+   (let [offset {:style {:margin-left (* 10 depth)}}]
+     (if (sequential? form)
+       [:.branch offset (map #(self-reference % (inc depth)) form)]
+       [:.leaf   offset (str form)]))))
+   ```
+
+   and can make use of hooks e.g.
+
+   ```clojure
+(rum/defnc ta
+  []
+  (let [render! (rum/use-render)]
+    (rum/use-effect
+     (fn []
+       (let [ta (rum/ref-node r)]
+         (set! (.-height (.-style ta)) "0")
+         (set! (.-height (.-style ta)) (str (+ 2 (.-scrollHeight ta)) "px")))))
+    [:textarea
+     { :ref          r
+      :style         { :width  "100%"
+                      :padding "10px"
+                      :font    "inherit"
+                      :outline "none"
+                      :resize  "none"}
+      :default-value "Auto-resizing\ntextarea"
+      :placeholder   "Auto-resizing textarea"
+      :on-change     (fn [_] (render!)) }]))
+   ```
+3. The `defc(s)` macros do not accept the deprecated lifecycle methods only the new ones.
+4. New react `ref`s
+5. React context
+6. The development flow has changed and now uses `shadow-cljs`
+
+**HINT:** There are examples in `examples/rum/examples/fn` that are the implementation of the `class` examples but with `defnc` + hooks.
+
+
 <p align="center"><img src="https://s.tonsky.me/imgs/rum_logo.svg" style="height: 400px;"></p>
 
 Rum is a client/server library for HTML UI. In ClojureScript, it works as React wrapper, in Clojure, it is a static HTML generator.
