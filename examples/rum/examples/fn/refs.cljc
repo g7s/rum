@@ -12,7 +12,7 @@
   (let [render! (rum/use-render)]
     (rum/use-effect
      (fn []
-       (let [ta (rum/ref-node r)]
+       (let [ta (rum/ref-val r)]
          (set! (.-height (.-style ta)) "0")
          (set! (.-height (.-style ta)) (str (+ 2 (.-scrollHeight ta)) "px")))))
     [:textarea

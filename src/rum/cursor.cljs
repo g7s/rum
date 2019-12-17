@@ -7,10 +7,10 @@
     (-equiv this other))
 
   IAtom
-  
+
   IMeta
   (-meta [_] meta)
-  
+
   IEquiv
   (-equiv [this other]
     (identical? this other))
@@ -28,7 +28,6 @@
           (when (not= old new)
             (callback key this old new)))))
     this)
-  
   (-remove-watch [this key]
     (remove-watch ref (list this key))
     this)
@@ -50,10 +49,9 @@
     (-reset! this (f (-deref this) a b)))
   (-swap! [this f a b rest]
     (-reset! this (apply f (-deref this) a b rest)))
-  
+
   IPrintWithWriter
   (-pr-writer [this writer opts]
     (-write writer "#object [rum.cursor.Cursor ")
     (pr-writer {:val (-deref this)} writer opts)
     (-write writer "]")))
-

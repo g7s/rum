@@ -12,7 +12,7 @@
 
 
 (defn state
-  "Given React component, returns Rum state associated with it."
+  "Given React component, return Rum state associated with it."
   [comp]
   (gobj/get (.-state comp) ":rum/state"))
 
@@ -290,12 +290,6 @@
   (js/React.cloneElement element #js { "ref" ref }))
 
 
-(defn ref-node
-  "Return the DOM node associated with a `ref`."
-  [ref]
-  (js/ReactDOM.findDOMNode (ref-val ref)))
-
-
 ;; static mixin
 
 (def static
@@ -422,7 +416,7 @@
 
 ;; hooks
 
-(def use-ref useRef)
+(def use-ref js/React.useRef)
 
 
 (defn use-state
@@ -470,54 +464,69 @@
       (-deref [_] (ref-val ref)))))
 
 
-
-(def use-effect
-  (util/create-hook useEffect
-                    (fn [f]
-                      #(let [dispose (f)]
-                         (if (fn? dispose) dispose (constantly nil))))))
-
-
-(def use-layout-effect
-  (util/create-hook useLayoutEffect
-                    (fn [f]
-                      #(let [dispose (f)]
-                         (if (fn? dispose) dispose (constantly nil))))))
+(defn- make-effect-fn
+  [f]
+  (fn []
+    (let [res (f)]
+      (fn []
+        (when (fn? res) (res))))))
 
 
-(def use-context useContext)
+(defn use-effect
+  ([f]
+   ;; Passing nil will make this effect run after *every* render
+   (js/React.useEffect (make-effect-fn f) nil))
+  ([f deps]
+   (js/React.useEffect (make-effect-fn f) (util/to-array-deps deps))))
 
 
-(def use-memo
-  (util/create-hook useMemo identity))
+(defn use-layout-effect
+  ([f]
+   (js/React.useLayoutEffect (make-effect-fn f) nil))
+  ([f deps]
+   (js/React.useLayoutEffect (make-effect-fn f) (util/to-array-deps deps))))
 
 
-(def use-callback
-  (util/create-hook useCallback
-                    (fn [f]
-                      (if (fn? f) f (fn [] f)))))
+(def use-context js/React.useContext)
 
 
-(defn use-react
-  "Hook that re-renders component when `iref` changes. Return deref `iref`."
-  [iref]
-  (let [state (use-state @iref)
-        key   (use-memo
-               (fn []
-                 (let [key (gensym "use-react")]
-                   (add-watch iref key #(reset! state %4))
-                   key))
-               [iref])]
-    (use-effect (fn [] (fn [] (remove-watch iref key))) [key])
-    @state))
+(defn use-memo
+  [f deps]
+  (js/React.useMemo f (util/to-array-deps deps)))
+
+
+(defn use-callback
+  [f deps]
+  (js/React.useCallback f (util/to-array-deps deps)))
 
 
 (defn use-render
-  "Hook that return a function that when called will re-render component."
+  "Hook that returns a function that when called will re-render component."
   []
-  (let [s (use-state false)]
+  (let [[s set-s!] (js/React.useState false)]
     (fn []
-      (swap! s not))))
+      (set-s! (not s)))))
+
+
+(defn use-react-when
+  "Re-render component when `iref` changes but only when `c` is truthy.
+  Same as (when c (use-react iref))."
+  [c iref]
+  (let [key (ref-val (js/React.useRef (gensym "use-react")))
+        render! (use-render)]
+    (js/React.useEffect
+     (fn []
+       (when c
+         (add-watch iref key render!))
+       (fn []
+         (remove-watch iref key)))
+     #js [c iref])
+    (when c @iref)))
+
+
+(defn use-react
+  [iref]
+  (use-react-when true iref))
 
 
 ;; wrappers

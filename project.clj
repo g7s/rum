@@ -23,7 +23,7 @@
           :repl-options {:init-ns user
                          :nrepl-middleware
                          [shadow.cljs.devtools.server.nrepl04/middleware]}}
-   :perf {:source-paths ["perf"]
+   #_:perf #_{:source-paths ["perf"]
           :dependencies
           [[enlive    "1.1.6"]
            [criterium "0.4.4"]

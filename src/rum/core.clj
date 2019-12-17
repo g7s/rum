@@ -472,6 +472,11 @@
 (def use-react deref)
 
 
+(defn use-react-when
+  [c iref]
+  (when c (deref iref)))
+
+
 (defn use-render [] (fn []))
 
 

@@ -12,3 +12,4 @@ pom.xml.asc
 .nrepl-history
 /.shadow-cljs
 node_modules
+/.projectile

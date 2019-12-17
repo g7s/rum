@@ -9,7 +9,7 @@
 (rum/defcs ta
   < {:after-render
       (fn [state]
-        (let [ta (rum/ref-node r)]
+        (let [ta (rum/ref-val r)]
           (set! (.-height (.-style ta)) "0")
           (set! (.-height (.-style ta)) (str (+ 2 (.-scrollHeight ta)) "px")))
         state)}

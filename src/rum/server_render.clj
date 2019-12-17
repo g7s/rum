@@ -10,6 +10,11 @@
        (= :rum/nothing (first element))))
 
 
+(defn fragment? [element]
+  (and (vector? element)
+       (= :* (first element))))
+
+
 (def ^:dynamic *select-value*)
 
 (defn append!
@@ -44,7 +49,7 @@
   String  (to-str [s] s)
   Object  (to-str [x] (str x))
   nil     (to-str [_] ""))
-  
+
 
 (def ^{:doc "A list of elements that must be rendered without a closing tag."
        :private true}
@@ -111,7 +116,7 @@
     :item-type "itemType"
     :item-id "itemId"
     :item-ref "itemRef"
-    
+
     ;; https://github.com/facebook/react/blob/v15.6.2/src/renderers/dom/shared/SVGDOMPropertyConfig.js
     :allow-reorder "allowReorder"
     :attribute-name "attributeName"
@@ -229,7 +234,7 @@
                        (.append repl))
                      (inc i)))))
         (if (nil? sb) s (str sb))))))
-        
+
 
 (defn parse-selector [s]
   (loop [matches (re-seq #"([#.])?([^#.]+)" (name s))
@@ -244,20 +249,25 @@
       [tag id classes])))
 
 
-(defn normalize-element [[first second & rest]]
+(defn- attrs-children
+  [[_ second & rest]]
+  (if (or (map? second)
+          (nil? second))
+    [second rest]
+    [nil (cons second rest)]))
+
+
+(defn normalize-element [[first second & rest :as element]]
   (when-not (or (keyword? first)
                 (symbol? first)
                 (string? first))
     (throw (ex-info "Expected a keyword as a tag" { :tag first })))
   (let [[tag tag-id tag-classes] (parse-selector first)
-        [attrs children] (if (or (map? second)
-                                 (nil? second))
-                           [second rest]
-                           [nil    (cons second rest)])
-        attrs-classes    (:class attrs)
-        classes          (if (and tag-classes attrs-classes)
-                           [tag-classes attrs-classes]
-                           (or tag-classes attrs-classes))]
+        [attrs children]         (attrs-children element)
+        attrs-classes            (:class attrs)
+        classes                  (if (and tag-classes attrs-classes)
+                                   [tag-classes attrs-classes]
+                                   (or tag-classes attrs-classes))]
     [tag tag-id classes attrs children]))
 
 
@@ -403,34 +413,36 @@
 (defn render-element!
   "Render an element vector as a HTML element."
   [element *state sb]
-  (when-not (nothing? element)
-    (let [[tag id classes attrs children] (normalize-element element)]
-      (append! sb "<" tag)
+  (if (fragment? element)
+    (-render-html (peek (attrs-children element)) *state sb)
+    (when-not (nothing? element)
+      (let [[tag id classes attrs children] (normalize-element element)]
+        (append! sb "<" tag)
 
-      (when-some [type (:type attrs)]
-        (append! sb " type=\"" type "\""))
+        (when-some [type (:type attrs)]
+          (append! sb " type=\"" type "\""))
 
-      (when (and (= "option" tag)
-                 (= (get-value attrs) *select-value*))
-        (append! sb " selected=\"\""))
+        (when (and (= "option" tag)
+                   (= (get-value attrs) *select-value*))
+          (append! sb " selected=\"\""))
 
-      (when id
-        (append! sb " id=\"" id "\""))
+        (when id
+          (append! sb " id=\"" id "\""))
 
-      (render-attrs! tag attrs sb)
+        (render-attrs! tag attrs sb)
 
-      (render-classes! classes sb)
+        (render-classes! classes sb)
 
-      (when (= :state/root @*state)
-        (append! sb " data-reactroot=\"\""))
+        (when (= :state/root @*state)
+          (append! sb " data-reactroot=\"\""))
 
-      (when (not= :state/static @*state)
-        (vreset! *state :state/tag-open))
+        (when (not= :state/static @*state)
+          (vreset! *state :state/tag-open))
 
-      (if (= "select" tag)
-        (binding [*select-value* (get-value attrs)]
-          (render-content! tag attrs children *state sb))
-        (render-content! tag attrs children *state sb)))))
+        (if (= "select" tag)
+          (binding [*select-value* (get-value attrs)]
+            (render-content! tag attrs children *state sb))
+          (render-content! tag attrs children *state sb))))))
 
 
 (extend-protocol HtmlRenderer
