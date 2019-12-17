@@ -6,7 +6,7 @@ This is a fork of Rum that introduces several backwards incompatible changes.
 1. `request-render` and `force-render` accept state instead of component
 2. There is a `defnc` macro that defines a react function component that accept wrappers
 
-   ```clojure
+```clojure
 (rum/defnc self-reference <
   (rum/wrap-memo)
   (rum/wrap-key (fn [form depth] (str form)))
@@ -20,7 +20,7 @@ This is a fork of Rum that introduces several backwards incompatible changes.
 
    and can make use of hooks e.g.
 
-   ```clojure
+```clojure
 (rum/defnc ta
   []
   (let [render! (rum/use-render)]
