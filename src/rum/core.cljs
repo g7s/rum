@@ -529,6 +529,17 @@
   (use-react-when true iref))
 
 
+(defn use-atom
+  "Create an atom that persists between renders and remove any watches on unmount."
+  [val]
+  (let [patom (ref-val (use-ref (atom val)))]
+    (use-effect #(fn []
+                   (doseq [[watch-key _] (.-watches patom)]
+                     (remove-watch patom watch-key)))
+                [])
+    patom))
+
+
 ;; wrappers
 
 ;; A wrapper is a map with a :wrap key that specifies the type of wrap

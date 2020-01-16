@@ -480,6 +480,9 @@
 (defn use-render [] (fn []))
 
 
+(def use-atom atom)
+
+
 (defn wrap-memo ([] identity) ([e] identity))
 
 

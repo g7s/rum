@@ -59,12 +59,12 @@
                      :phone "+7913 000 0000"
                      :age   "22"})]
     [:dl
-      [:dt "E-mail:"]
-      [:dd (validating-input  (rum/cursor state :email) #(re-matches #"[^@]+@[^@.]+\..+" %))]
-      [:dt "Phone:"]
-      [:dd (restricting-input (rum/cursor state :phone) #(re-matches #"[0-9\- +()]*" %))]
-      [:dt "Age:"]
-      [:dd (restricting-input-native (rum/cursor state :age) #(re-matches #"([1-9][0-9]*)?" %))]]))
+     [:dt "E-mail:"]
+     [:dd (validating-input  (rum/cursor state :email) #(re-matches #"[^@]+@[^@.]+\..+" %))]
+     [:dt "Phone:"]
+     [:dd (restricting-input (rum/cursor state :phone) #(re-matches #"[0-9\- +()]*" %))]
+     [:dt "Age:"]
+     [:dd (restricting-input-native (rum/cursor state :age) #(re-matches #"([1-9][0-9]*)?" %))]]))
 
 
 (defn mount! [mount-el]
