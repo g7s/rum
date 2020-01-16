@@ -58,8 +58,7 @@
                                   (-> (gobj/get props ":rum/initial-state")
                                       (assoc :rum/react-component this)
                                       (call-all init props)
-                                      volatile!)
-                                  ":rum/rflag" false})
+                                      volatile!)})
                            (.call js/React.Component this props)))
         _              (goog/inherits ctor js/React.Component)
         prototype      (gobj/get ctor "prototype")]
@@ -182,13 +181,51 @@
     (build-ctor render mixins display-name)))
 
 
+(def ^:private schedule
+  (or (and (exists? js/window)
+           (or js/window.requestAnimationFrame
+               js/window.webkitRequestAnimationFrame
+               js/window.mozRequestAnimationFrame
+               js/window.msRequestAnimationFrame))
+      #(js/setTimeout % 16)))
+
+
+(def ^:private batch
+  (or (when (exists? js/ReactNative) js/ReactNative.unstable_batchedUpdates)
+      (when (exists? js/ReactDOM) js/ReactDOM.unstable_batchedUpdates)
+      (fn [f a] (f a))))
+
+
+(def ^:private empty-queue [])
+(def ^:private render-queue (volatile! empty-queue))
+
+
+(defn- render-all [queue]
+  (doseq [render-fn queue]
+    (render-fn)))
+
+
+(defn- render []
+  (let [queue @render-queue]
+    (vreset! render-queue empty-queue)
+    (batch render-all queue)))
+
+
+(defn schedule-render
+  [render-fn]
+  (when (empty? @render-queue)
+    (schedule render))
+  (vswap! render-queue conj render-fn))
+
+
 (defn request-render
+  "Schedules react component to be rendered on next animation frame."
   [state]
-  (letfn [(updater [state]
-            (unchecked-set state ":rum/rflag"
-                           (not (unchecked-get state ":rum/rflag")))
-            state)]
-    (.setState (react-component state) updater)))
+  (let [comp (react-component state)]
+    (schedule-render (fn []
+                       (when (and (some? comp)
+                                  (not (gobj/get comp ":rum/unmounted?")))
+                         (.forceUpdate comp))))))
 
 
 (defn force-render
@@ -501,18 +538,21 @@
 
 
 (defn use-render
-  "Hook that returns a function that when called will re-render component."
+  "Hook that returns a function that when called will schedule a re-render of the component."
   []
-  (let [[s set-s!] (js/React.useState false)]
+  (let [unmounted (js/React.useRef false)
+        [_ set-s!] (js/React.useState false)]
+    (js/React.useEffect #(fn [] (set-ref-val! unmounted true)) #js [])
     (fn []
-      (set-s! (not s)))))
+      (schedule-render #(when-not (ref-val unmounted)
+                          (set-s! not))))))
 
 
 (defn use-react-when
   "Re-render component when `iref` changes but only when `c` is truthy.
   Same as (when c (use-react iref))."
   [c iref]
-  (let [key (ref-val (js/React.useRef (gensym "use-react")))
+  (let [key     (ref-val (js/React.useRef (gensym "use-react")))
         render! (use-render)]
     (js/React.useEffect
      (fn []
@@ -545,7 +585,7 @@
 ;; A wrapper is a map with a :wrap key that specifies the type of wrap
 ;; (it can be either :component or :props default :component) and a
 ;; :fn key that holds the wrapping function.
-;; Wrappers can be fed into a defnc component.
+;; Wrappers can be fed (<) into a defnc component.
 
 (defn wrap-memo
   ([]

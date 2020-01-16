@@ -4,13 +4,11 @@
     [rum.examples.fn.core :as core]))
 
 
-(def r (rum/create-ref))
-
-
 (rum/defnc ta
   []
-  (let [render! (rum/use-render)]
-    (rum/use-effect
+  (let [r       (rum/use-ref)
+        render! (rum/use-render)]
+    (rum/use-layout-effect
      (fn []
        (let [ta (rum/ref-val r)]
          (set! (.-height (.-style ta)) "0")
@@ -27,7 +25,7 @@
       :on-change     (fn [_] (render!)) }]))
 
 
-(rum/defc refs []
+(rum/defnc refs []
   [:div
     (ta)])
 
