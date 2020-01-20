@@ -6,7 +6,7 @@
 
 (rum/defnc ta
   []
-  (let [r       (rum/use-ref)
+  (let [r       (rum/use-ref nil)
         render! (rum/use-render)]
     (rum/use-layout-effect
      (fn []
