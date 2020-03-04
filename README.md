@@ -43,6 +43,8 @@ This is a fork of Rum that introduces several backwards incompatible changes.
 3. The `defc(s)` macros do not accept the deprecated lifecycle methods only the new ones.
 4. New react `ref`s
 5. React context
+6. `derived-atom` instead of `:check-equals?` option now accepts an `:eq-fn` option which is
+a function that tests for equality.
 6. The development flow has changed and now uses `shadow-cljs`
 
 **HINT:** There are examples in `examples/rum/examples/fn` that are the implementation of the `class` examples but with `defnc` + hooks.

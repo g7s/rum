@@ -433,7 +433,6 @@
   @ref)
 
 
-
 ;; raw hooks
 
 (def useRef js/React.useRef)
@@ -580,6 +579,34 @@
     patom))
 
 
+(defn use-derived-atom
+  "Create a derived-atom that persists between renders and remove the watch on unmount."
+  {:style/indent 2}
+  ([refs key f]
+   (use-derived-atom refs key f {:eq-fn =}))
+  ([refs key f opts]
+   (let [calc  (case (count refs)
+                 1 (let [[a] refs] #(f @a))
+                 2 (let [[a b] refs] #(f @a @b))
+                 3 (let [[a b c] refs] #(f @a @b @c))
+                 #(apply f (map deref refs)))
+         [v _] (useState calc)
+         sink  (ref-val (use-ref (atom v)))
+         watch (fn [_ _ _ _]
+                 (let [new-val (calc)]
+                   (when-not ((:eq-fn opts) @sink new-val)
+                     (reset! sink new-val))))]
+     (use-effect
+      (fn []
+        (doseq [ref refs]
+          (add-watch ref key watch))
+        (fn []
+          (doseq [ref refs]
+            (remove-watch ref key))))
+      [])
+     sink)))
+
+
 ;; wrappers
 
 ;; A wrapper is a map with a :wrap key that specifies the type of wrap
@@ -646,7 +673,7 @@
              - `f`    - function that must accept N arguments (same as number of source refs) and return a value to be written to the sink ref. Note: `f` will be called with already dereferenced values,
              - `opts` - optional. Map of:
                - `:ref` - use this as sink ref. By default creates new atom,
-               - `:check-equals?` - Defaults to `true`. If equality check should be run on each source update: `(= @sink (f new-vals))`. When result of recalculating `f` equals to the old value, `reset!` won’t be called. Set to `false` if checking for equality can be expensive."}
+               - `:eq-fn` - Defaults to `=`. An equality check function.  With the default when the result of recalculating `f` equals to the old value, `reset!` won’t be called. Set to `(constantly false)` if checking for equality can be expensive."}
   derived-atom derived-atom/derived-atom)
 
 

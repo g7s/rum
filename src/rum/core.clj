@@ -206,8 +206,8 @@
 
 
 (def ^{:style/indent 2
-       :arglists '([refs key f] [refs key f opts])
-       :doc "Use this to create “chains” and acyclic graphs of dependent atoms.
+       :arglists     '([refs key f] [refs key f opts])
+       :doc          "Use this to create “chains” and acyclic graphs of dependent atoms.
 
              [[derived-atom]] will:
 
@@ -245,7 +245,7 @@
              - `f`    - function that must accept N arguments (same as number of source refs) and return a value to be written to the sink ref. Note: `f` will be called with already dereferenced values,
              - `opts` - optional. Map of:
                - `:ref` - use this as sink ref. By default creates new atom,
-               - `:check-equals?` - Defaults to `true`. If equality check should be run on each source update: `(= @sink (f new-vals))`. When result of recalculating `f` equals to the old value, `reset!` won’t be called. Set to `false` if checking for equality can be expensive."}
+               - `:eq-fn` - Defaults to `=`. An equality check function.  With the default when the result of recalculating `f` equals to the old value, `reset!` won’t be called. Set to `(constantly false)` if checking for equality can be expensive."}
   derived-atom derived-atom/derived-atom)
 
 
@@ -481,6 +481,9 @@
 
 
 (def use-atom atom)
+
+
+(def use-derived-atom derived-atom)
 
 
 (defn wrap-memo ([] identity) ([e] identity))
