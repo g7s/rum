@@ -35,7 +35,7 @@
        boolean
        (to-array-deps [this] (if (true? this) nil #js []))
        cljs.core/ISequential
-       (to-array-deps [this] (into-array this))
+       (to-array-deps [this] (to-array this))
        default
        (to-array-deps [this] #js [this]))
 
