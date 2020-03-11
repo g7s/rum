@@ -34,19 +34,10 @@
        (to-array-deps [this] this)
        boolean
        (to-array-deps [this] (if (true? this) nil #js []))
-       cljs.core/ISequential
+       cljs.core/PersistentVector
        (to-array-deps [this] (to-array this))
        default
        (to-array-deps [this] #js [this]))
-
-
-     (defn create-hook
-       [react-hook hook-impl-fn]
-       (fn hook
-         ([f]
-          (react-hook (hook-impl-fn f) nil))
-         ([f deps]
-          (react-hook (hook-impl-fn f) (to-array-deps deps)))))
 
 
      (defn map->obj
