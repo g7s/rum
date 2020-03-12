@@ -500,19 +500,27 @@
       (-deref [_] (ref-val ref)))))
 
 
+(defn- make-effect-fn
+  [f]
+  (fn []
+    (let [res (f)]
+      (fn []
+        (when (fn? res) (res))))))
+
+
 (defn use-effect
   ([f]
    ;; Passing nil will make this effect run after *every* render
-   (js/React.useEffect f nil))
+   (js/React.useEffect (make-effect-fn f) nil))
   ([f deps]
-   (js/React.useEffect f (util/to-array-deps deps))))
+   (js/React.useEffect (make-effect-fn f) (util/to-array-deps deps))))
 
 
 (defn use-layout-effect
   ([f]
-   (js/React.useLayoutEffect f nil))
+   (js/React.useLayoutEffect (make-effect-fn f) nil))
   ([f deps]
-   (js/React.useLayoutEffect f (util/to-array-deps deps))))
+   (js/React.useLayoutEffect (make-effect-fn f) (util/to-array-deps deps))))
 
 
 (def use-context js/React.useContext)
