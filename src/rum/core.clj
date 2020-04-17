@@ -483,7 +483,7 @@
 (def use-atom atom)
 
 
-(def use-derived-atom derived-atom)
+(def ^{:style/indent 2} use-derived-atom derived-atom)
 
 
 (defn wrap-memo ([] identity) ([e] identity))

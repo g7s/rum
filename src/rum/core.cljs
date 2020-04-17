@@ -572,10 +572,11 @@
   "Create an atom that persists between renders and remove any watches on unmount."
   [val]
   (let [patom (ref-val (use-ref (atom val)))]
-    (use-effect #(fn []
-                   (doseq [[watch-key _] (.-watches patom)]
-                     (remove-watch patom watch-key)))
-                [])
+    (use-effect
+     #(fn []
+        (doseq [[watch-key _] (.-watches patom)]
+          (remove-watch patom watch-key)))
+     [])
     patom))
 
 
@@ -591,19 +592,20 @@
                  3 (let [[a b c] refs] #(f @a @b @c))
                  #(apply f (map deref refs)))
          [v _] (useState calc)
-         sink  (ref-val (use-ref (atom v)))
-         watch (fn [_ _ _ _]
-                 (let [new-val (calc)]
-                   (when-not ((:eq-fn opts) @sink new-val)
-                     (reset! sink new-val))))]
+         sink  (ref-val (use-ref (atom v)))]
      (use-effect
       (fn []
-        (doseq [ref refs]
-          (add-watch ref key watch))
-        (fn []
+        (let [watch
+              (fn [_ _ _ _]
+                (let [new-val (calc)]
+                  (when-not ((:eq-fn opts) @sink new-val)
+                    (reset! sink new-val))))]
           (doseq [ref refs]
-            (remove-watch ref key))))
-      [])
+            (add-watch ref key watch))
+          (fn []
+            (doseq [ref refs]
+              (remove-watch ref key)))))
+      (:deps opts []))
      sink)))
 
 

@@ -17,7 +17,7 @@
     [rum.examples.class.errors         :as errors]))
 
 (def page (str
-"<!doctype html>
+           "<!doctype html>
 <html>
   <head>
     <meta http-equiv='content-type' content='text/html;charset=UTF-8'/>
