@@ -131,7 +131,8 @@
   (-defc 'rum.core/build-defcs (boolean (:ns &env)) body))
 
 
-(defn- build-ctor [render mixins display-name]
+(defn- build-ctor
+  [render mixins display-name]
   (let [init           (collect :init mixins)                ;; state props -> state
         will-mount     (collect* [:will-mount                ;; state -> state
                                   :before-render] mixins)    ;; state -> state
@@ -152,20 +153,23 @@
         (or dom [:rum/nothing])))))
 
 
-(defn ^:no-doc build-defnc [render-body wrappers display-name]
+(defn ^:no-doc build-defnc
+  [render-body wrappers display-name]
   (let [render-body (reduce #(%2 %1) render-body wrappers)]
     (fn [& args]
       (or (apply render-body args) [:rum/nothing]))))
 
 
-(defn ^:no-doc build-defc [render-body mixins display-name]
+(defn ^:no-doc build-defc
+  [render-body mixins display-name]
   (if (empty? mixins)
     (fn [& args] (or (apply render-body args) [:rum/nothing]))
     (let [render (fn [state] [(apply render-body (:rum/args state)) state])]
       (build-ctor render mixins display-name))))
 
 
-(defn ^:no-doc build-defcs [render-body mixins display-name]
+(defn ^:no-doc build-defcs
+  [render-body mixins display-name]
   (let [render (fn [state] [(apply render-body state (:rum/args state)) state])]
     (build-ctor render mixins display-name)))
 
@@ -387,10 +391,12 @@
 
    (rum/mount (counter \"Click count: \"))
    ```"
-  ([initial] (local initial :rum/local))
+  ([initial]
+   (local initial :rum/local))
   ([initial key]
-   {:will-mount (fn [state]
-                  (assoc state key (atom initial)))}))
+   {:will-mount
+    (fn [state]
+      (assoc state key (atom initial)))}))
 
 
 (def reactive "Supported, does nothing." {})
@@ -399,43 +405,6 @@
 (def ^{:arglists '([ref])
        :doc      "Supported as simple deref."}
   react deref)
-
-
-;; raw hooks
-
-(defn useRef
-  [initial]
-  (throw (UnsupportedOperationException. "useRef is only available from ClojureScript")))
-
-
-(defn useState
-  [initial]
-  (throw (UnsupportedOperationException. "useState is only available from ClojureScript")))
-
-
-(defn useEffect
-  [f deps]
-  (throw (UnsupportedOperationException. "useEffect is only available from ClojureScript")))
-
-
-(defn useContext
-  [ctx]
-  (throw (UnsupportedOperationException. "useContext is only available from ClojureScript")))
-
-
-(defn useMemo
-  [f deps]
-  (throw (UnsupportedOperationException. "useMemo is only available from ClojureScript")))
-
-
-(defn useCallback
-  [f deps]
-  (throw (UnsupportedOperationException. "useCallback is only available from ClojureScript")))
-
-
-(defn useLayoutEffect
-  [f deps]
-  (throw (UnsupportedOperationException. "useLayoutEffect is only available from ClojureScript")))
 
 
 ;; hooks
@@ -452,9 +421,6 @@
 (def ^:private noop-effect (fn ([_]) ([_ _])))
 
 
-(def ^:private identity-2 (fn ([f] f) ([f _] f)))
-
-
 (def use-effect noop-effect)
 
 
@@ -467,7 +433,7 @@
 (def use-memo (fn ([f] (f)) ([f _] (f))))
 
 
-(def use-callback identity-2)
+(def use-callback (fn ([f] f) ([f _] f)))
 
 
 (def use-react deref)

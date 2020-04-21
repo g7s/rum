@@ -1,4 +1,4 @@
-(defproject g7s/rum "0.11.6-SNAPSHOT"
+(defproject g7s/rum "0.11.7-SNAPSHOT"
   :description  "ClojureScript wrapper for React"
   :license      {:name "Eclipse"
                  :url  "http://www.eclipse.org/legal/epl-v10.html" }

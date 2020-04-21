@@ -132,7 +132,8 @@
     ctor))
 
 
-(defn- build-ctor [render mixins display-name]
+(defn- build-ctor
+  [render mixins display-name]
   (let [class  (build-class render mixins display-name)
         key-fn (first (collect :key-fn mixins))
         ctor   (if (some? key-fn)
@@ -146,7 +147,8 @@
     (with-meta ctor { :rum/class class })))
 
 
-(defn ^:no-doc build-defnc [render-body wrappers display-name]
+(defn ^:no-doc build-defnc
+  [render-body wrappers display-name]
   (let [gwr  (group-by #(:wrap % :component) wrappers)
         cwr  (map (some-fn :fn identity) (:component gwr))
         pwr  (map :fn (:props gwr))
@@ -164,7 +166,8 @@
     (with-meta ctor { :rum/class fnc })))
 
 
-(defn ^:no-doc build-defc [render-body mixins display-name]
+(defn ^:no-doc build-defc
+  [render-body mixins display-name]
   (if (empty? mixins)
     (let [class (fn [props]
                   (apply render-body (aget props ":rum/args")))
@@ -176,7 +179,8 @@
       (build-ctor render mixins display-name))))
 
 
-(defn ^:no-doc build-defcs [render-body mixins display-name]
+(defn ^:no-doc build-defcs
+  [render-body mixins display-name]
   (let [render (fn [state] [(apply render-body state (rum-args state)) state])]
     (build-ctor render mixins display-name)))
 
@@ -364,8 +368,10 @@
 
    (rum/mount (counter \"Click count: \"))
    ```"
-  ([] (local {}))
-  ([initial] (local initial :rum/local))
+  ([]
+   (local {}))
+  ([initial]
+   (local initial :rum/local))
   ([initial key]
    {:init
     (fn [state props]
@@ -433,23 +439,6 @@
   @ref)
 
 
-;; raw hooks
-
-(def useRef js/React.useRef)
-
-(def useState js/React.useState)
-
-(def useEffect js/React.useEffect)
-
-(def useContext js/React.useContext)
-
-(def useMemo js/React.useMemo)
-
-(def useCallback js/React.useCallback)
-
-(def useLayoutEffect js/React.useLayoutEffect)
-
-
 ;; hooks
 
 (def use-ref js/React.useRef)
@@ -457,7 +446,7 @@
 
 (defn use-state
   [initial]
-  (let [[state set-state!] (useState initial)]
+  (let [[state set-state!] (js/React.useState initial)]
     (reify
       cljs.core/IReset
       (-reset! [_ new-value]
@@ -480,7 +469,7 @@
 (defn use-var
   "A hook to define mutable variables that persist between renders (based on useRef hook)."
   [initial]
-  (let [ref (useRef initial)]
+  (let [ref (js/React.useRef initial)]
     (reify
       cljs.core/IReset
       (-reset! [_ new-value]
@@ -510,7 +499,6 @@
 
 (defn use-effect
   ([f]
-   ;; Passing nil will make this effect run after *every* render
    (js/React.useEffect (make-effect-fn f) nil))
   ([f deps]
    (js/React.useEffect (make-effect-fn f) (util/to-array-deps deps))))
