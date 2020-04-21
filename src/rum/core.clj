@@ -78,7 +78,8 @@
    Usage:
 
    ```
-   (rum/defnc label < rum/wrap-memo [t]
+   (rum/defnc label < (rum/wrap-memo)
+     [t]
      [:div t])
 
    ;; creates React function component

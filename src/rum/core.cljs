@@ -584,28 +584,37 @@
   "Create a derived-atom that persists between renders and remove the watch on unmount."
   {:style/indent 2}
   ([refs key f]
-   (use-derived-atom refs key f {:eq-fn =}))
-  ([refs key f opts]
-   (let [calc  (case (count refs)
-                 1 (let [[a] refs] #(f @a))
-                 2 (let [[a b] refs] #(f @a @b))
-                 3 (let [[a b c] refs] #(f @a @b @c))
-                 #(apply f (map deref refs)))
-         [v _] (useState calc)
-         sink  (ref-val (use-ref (atom v)))]
+   (use-derived-atom refs key f []))
+  ([refs key f deps]
+   (use-derived-atom refs key f deps {:eq-fn =}))
+  ([refs key f deps opts]
+   (let [all-deps (into refs deps)
+         calc     (use-memo
+                   (fn []
+                     (case (count refs)
+                       1 (let [[a] refs] #(f @a))
+                       2 (let [[a b] refs] #(f @a @b))
+                       3 (let [[a b c] refs] #(f @a @b @c))
+                       #(apply f (map deref refs))))
+                   all-deps)
+         sink     (use-memo
+                   (fn []
+                     (atom (calc)))
+                   [calc])
+         watch    (use-callback
+                   (fn [_ _ _ _]
+                     (let [new-val (calc)]
+                       (when-not ((:eq-fn opts) @sink new-val)
+                         (reset! sink new-val))))
+                   [sink (:eq-fn opts)])]
      (use-effect
       (fn []
-        (let [watch
-              (fn [_ _ _ _]
-                (let [new-val (calc)]
-                  (when-not ((:eq-fn opts) @sink new-val)
-                    (reset! sink new-val))))]
+        (doseq [ref refs]
+          (add-watch ref key watch))
+        (fn []
           (doseq [ref refs]
-            (add-watch ref key watch))
-          (fn []
-            (doseq [ref refs]
-              (remove-watch ref key)))))
-      (:deps opts []))
+            (remove-watch ref key))))
+      [watch])
      sink)))
 
 
