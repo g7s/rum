@@ -11,20 +11,24 @@
   IMeta
   (-meta [_] meta)
 
+  IWithMeta
+  (-with-meta [_ m]
+    (Cursor. ref path m))
+
   IEquiv
   (-equiv [this other]
     (identical? this other))
 
   IDeref
   (-deref [_]
-    (get-in (-deref ref) path))
+    ((::read meta get-in) (-deref ref) path))
 
   IWatchable
   (-add-watch [this key callback]
     (add-watch ref (list this key)
       (fn [_ _ oldv newv]
-        (let [old (get-in oldv path)
-              new (get-in newv path)]
+        (let [old ((::read meta get-in) oldv path)
+              new ((::read meta get-in) newv path)]
           (when (not= old new)
             (callback key this old new)))))
     this)
@@ -37,7 +41,7 @@
 
   IReset
   (-reset! [_ newv]
-    (swap! ref assoc-in path newv)
+    (swap! ref (::write meta update-in) path (constantly newv))
     newv)
 
   ISwap

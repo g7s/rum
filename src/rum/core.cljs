@@ -702,7 +702,9 @@
    The only supported option is `:meta`"
   [ref path & {:as options}]
   (if (instance? cursor/Cursor ref)
-    (cursor/Cursor. (.-ref ref) (into (.-path ref) path) (:meta options))
+    (cursor/Cursor. (.-ref ref)
+                    (into (.-path ref) path)
+                    (merge (.-meta ref) (:meta options)))
     (cursor/Cursor. ref path (:meta options))))
 
 
