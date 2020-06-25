@@ -703,7 +703,7 @@
   [ref path & {:as options}]
   (if (instance? cursor/Cursor ref)
     (cursor/Cursor. (.-ref ref)
-                    ((fnil into []) (.-path ref) path)
+                    (into (vec (.-path ref)) path)
                     (merge (.-meta ref) (:meta options)))
     (cursor/Cursor. ref path (:meta options))))
 
