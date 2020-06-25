@@ -201,7 +201,7 @@
   ^rum.cursor.Cursor [ref path & { :as options }]
   (if (instance? Cursor ref)
     (cursor/Cursor. (.-ref ^Cursor ref)
-                    (into (.-path ^Cursor ref) path)
+                    ((fnil into []) (.-path ^Cursor ref) path)
                     (merge (.-meta ^Cursor ref) (:meta options))
                     (volatile! {}))
     (cursor/Cursor. ref path (:meta options) (volatile! {}))))
