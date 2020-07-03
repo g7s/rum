@@ -546,7 +546,8 @@
        (when c
          (add-watch iref key render!))
        (fn []
-         (remove-watch iref key)))
+         (when c
+           (remove-watch iref key))))
      #js [c iref])
     (when c @iref)))
 
