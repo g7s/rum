@@ -210,9 +210,8 @@
 
 
 (defn- render []
-  (let [queue @render-queue]
-    (vreset! render-queue empty-queue)
-    (batch render-all queue)))
+  (batch render-all @render-queue)
+  (vreset! render-queue empty-queue))
 
 
 (defn schedule-render
@@ -527,12 +526,12 @@
 (defn use-render
   "Hook that returns a function that when called will schedule a re-render of the component."
   []
-  (let [unmounted (js/React.useRef false)
-        [_ set-s!] (js/React.useState false)]
+  (let [unmounted  (js/React.useRef false)
+        [_ set-s!] (js/React.useState (or js/Number.MIN_SAFE_INTEGER 0))]
     (js/React.useEffect #(fn [] (set-ref-val! unmounted true)) #js [])
     (fn []
       (schedule-render #(when-not (ref-val unmounted)
-                          (set-s! not))))))
+                          (set-s! inc))))))
 
 
 (defn use-react-when
